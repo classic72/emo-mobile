@@ -92,6 +92,7 @@ function readFacts() {
 function handleMemory(s) {
   const text = s.trim();
 
+  // Сохранение факта
   if (/^запомни\s*$/i.test(text)) {
     return 'Напиши, что именно запомнить. Например: Запомни, что мой автомобиль — Соболь.';
   }
@@ -101,27 +102,58 @@ function handleMemory(s) {
   if (match) {
     const fact = match[1].trim();
     const facts = readFacts();
+
     facts.push(fact);
 
     try {
-      localStorage.setItem(factsKey, JSON.stringify(facts.slice(-100)));
+      localStorage.setItem(
+        factsKey,
+        JSON.stringify(facts.slice(-100))
+      );
       return 'Хорошо, запомнил: ' + fact;
     } catch (e) {
       return 'Не удалось сохранить заметку в памяти телефона.';
     }
   }
 
+  // Просмотр памяти
   if (/^(что ты помнишь|что ты запомнил|покажи память)\??$/i.test(text)) {
     const facts = readFacts();
 
     if (!facts.length) {
-      return 'Пока отдельная память пуста. Скажи: Запомни, что мой автомобиль — Соболь.';
+      return 'Пока моя память пуста.';
     }
 
     return 'Я помню:\n' +
       facts.map((fact, i) => (i + 1) + '. ' + fact).join('\n');
   }
 
+  // Ответ на вопрос об автомобиле
+  if (
+    /(автомобил|машин)/i.test(text) &&
+    /(какой|какая|какое|какую|модель|у меня|мой|моя)/i.test(text)
+  ) {
+    const facts = readFacts().slice().reverse();
+
+    const fact = facts.find(
+      x => /(автомобил|машин)/i.test(x)
+    );
+
+    if (!fact) {
+      return 'Ты пока не рассказывал мне, какой у тебя автомобиль.';
+    }
+
+    const model = fact.match(/[—–-:]\s*(.+)$/);
+
+    if (model) {
+      return 'Ты говорил, что твой автомобиль — ' +
+        model[1].trim() + '.';
+    }
+
+    return 'В моей памяти записано: ' + fact;
+  }
+
+  // Очистка только отдельной памяти
   if (/^(забудь всё|очисти память)$/i.test(text)) {
     try {
       localStorage.removeItem(factsKey);
@@ -130,12 +162,7 @@ function handleMemory(s) {
       return 'Не удалось очистить память.';
     }
   }
-    const model = fact.match(/[—–-:]\s*(.+)$/);
 
-    return model
-      ? 'Ты говорил, что твой автомобиль — ' + model[1] + '.'
-      : 'В моей памяти записано: ' + fact;
-  }
   return null;
 }
  function reply(s){const t=s.toLowerCase(); const memoryAnswer = handleMemory(s);
