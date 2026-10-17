@@ -75,7 +75,66 @@ const key='emo_mobile_chat_v1';
 function add(text,who,save=true){const el=document.createElement('div');el.className='msg '+who;el.textContent=text;messages.appendChild(el);messages.scrollTop=messages.scrollHeight;if(save)persist();return el}
 function persist(){try{localStorage.setItem(key,JSON.stringify([...messages.querySelectorAll('.msg')].map(x=>({text:x.textContent,who:x.classList.contains('user')?'user':'bot'}))))}catch(e){}}
 function load(){try{const arr=JSON.parse(localStorage.getItem(key)||'null');if(Array.isArray(arr)&&arr.length){messages.innerHTML='';arr.slice(-80).forEach(x=>add(String(x.text||''),x.who==='user'?'user':'bot',false))}}catch(e){}}
-function reply(s){const t=s.toLowerCase();if(/привет|здравств|хай|hello/.test(t))return 'Привет! Рад тебя видеть. О чём поговорим?';if(/как дела|как ты/.test(t))return 'Я в хорошем настроении и готов общаться! А как у тебя дела?';if(/кто ты|твоё имя|тебя зовут/.test(t))return 'Я виртуальный EMO — пока ранний прототип, который мы постепенно оживим.';if(/памят|запомни/.test(t))return 'В этой версии переписка сохраняется в браузере на этом телефоне. Настоящую управляемую память добавим отдельно.';if(/пока|до свидан/.test(t))return 'До скорой встречи! Я буду здесь, когда вернёшься.';if(/спасибо/.test(t))return 'Всегда пожалуйста! 😊';if(/помоги|соболь|машин|ремонт/.test(t))return 'Давай разберёмся вместе. Пока у меня нет подключённой нейросети, поэтому для точных технических ответов сначала подключим ИИ.';return 'Я тебя услышал! Сейчас я работаю в демонстрационном режиме и ещё не подключён к языковой модели. Но мы уже подготовили основу для настоящего EMO.'}
+// Отдельная память EMO
+const factsKey = 'emo_mobile_facts_v1';
+
+function readFacts() {
+  try {
+    const facts = JSON.parse(localStorage.getItem(factsKey) || '[]');
+    return Array.isArray(facts)
+      ? facts.filter(x => typeof x === 'string')
+      : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function handleMemory(s) {
+  const text = s.trim();
+
+  if (/^запомни\s*$/i.test(text)) {
+    return 'Напиши, что именно запомнить. Например: Запомни, что мой автомобиль — Соболь.';
+  }
+
+  const match = text.match(/^запомни(?:\s*,?\s*что)?\s+(.+)$/i);
+
+  if (match) {
+    const fact = match[1].trim();
+    const facts = readFacts();
+    facts.push(fact);
+
+    try {
+      localStorage.setItem(factsKey, JSON.stringify(facts.slice(-100)));
+      return 'Хорошо, запомнил: ' + fact;
+    } catch (e) {
+      return 'Не удалось сохранить заметку в памяти телефона.';
+    }
+  }
+
+  if (/^(что ты помнишь|что ты запомнил|покажи память)\??$/i.test(text)) {
+    const facts = readFacts();
+
+    if (!facts.length) {
+      return 'Пока отдельная память пуста. Скажи: Запомни, что мой автомобиль — Соболь.';
+    }
+
+    return 'Я помню:\n' +
+      facts.map((fact, i) => (i + 1) + '. ' + fact).join('\n');
+  }
+
+  if (/^(забудь всё|очисти память)$/i.test(text)) {
+    try {
+      localStorage.removeItem(factsKey);
+      return 'Отдельную память очистил. История переписки осталась.';
+    } catch (e) {
+      return 'Не удалось очистить память.';
+    }
+  }
+
+  return null;
+}
+ function reply(s){const t=s.toLowerCase(); const memoryAnswer = handleMemory(s);
+  if (memoryAnswer) return memoryAnswer;if(/привет|здравств|хай|hello/.test(t))return 'Привет! Рад тебя видеть. О чём поговорим?';if(/как дела|как ты/.test(t))return 'Я в хорошем настроении и готов общаться! А как у тебя дела?';if(/кто ты|твоё имя|тебя зовут/.test(t))return 'Я виртуальный EMO — пока ранний прототип, который мы постепенно оживим.';if(/памят|запомни/.test(t))return 'В этой версии переписка сохраняется в браузере на этом телефоне. Настоящую управляемую память добавим отдельно.';if(/пока|до свидан/.test(t))return 'До скорой встречи! Я буду здесь, когда вернёшься.';if(/спасибо/.test(t))return 'Всегда пожалуйста! 😊';if(/помоги|соболь|машин|ремонт/.test(t))return 'Давай разберёмся вместе. Пока у меня нет подключённой нейросети, поэтому для точных технических ответов сначала подключим ИИ.';return 'Я тебя услышал! Сейчас я работаю в демонстрационном режиме и ещё не подключён к языковой модели. Но мы уже подготовили основу для настоящего EMO.'}
 document.getElementById('chat').addEventListener('submit',e=>{e.preventDefault();const s=entry.value.trim();if(!s)return;add(s,'user');entry.value='';statusEl.textContent='Слушаю и думаю…';robot.className='robot think';setTimeout(()=>{const r=reply(s);add(r,'bot');robot.className='robot happy';statusEl.textContent='Кажется, я понял тебя!';},350)});
 document.querySelectorAll('[data-mood]').forEach(b=>b.addEventListener('click',()=>{const m=b.dataset.mood;robot.className='robot'+(m==='normal'?'':' '+m);statusEl.textContent=({happy:'Ура! Мне весело!',think:'Хмм… дай подумать.',sleep:'Тихо-тихо… отдыхаю.',normal:'Я здесь. Давай знакомиться!'})[m]}));
 document.getElementById('clear').addEventListener('click',()=>{if(confirm('Удалить всю сохранённую переписку?')){messages.innerHTML='';localStorage.removeItem(key);add('Переписка очищена. Начнём сначала?','bot')}});
