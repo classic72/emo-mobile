@@ -165,21 +165,35 @@ function handleMemory(s) {
 
   return null;
 }
- function reply(s){const t=s.toLowerCase(); const memoryAnswer = handleMemory(s);
-  if (memoryAnswer) return memoryAnswer;if(/привет|здравств|хай|hello/.test(t))return 'Привет! Рад тебя видеть. О чём поговорим?';if(/как дела|как ты/.test(t))return 'Я в хорошем настроении и готов общаться! А как у тебя дела?';if(/кто ты|твоё имя|тебя зовут/.test(t))return 'Я виртуальный EMO — пока ранний прототип, который мы постепенно оживим.';if(/памят|запомни/.test(t))return 'В этой версии переписка сохраняется в браузере на этом телефоне. Настоящую управляемую память добавим отдельно.';if(/пока|до свидан/.test(t))return 'До скорой встречи! Я буду здесь, когда вернёшься.';if(/спасибо/.test(t))return 'Всегда пожалуйста! 😊';if(/помоги|соболь|машин|ремонт/.test(t))return 'Давай разберёмся вместе. Пока у меня нет подключённой нейросети, поэтому для точных технических ответов сначала подключим ИИ.';return 'Я тебя услышал! Сейчас я работаю в демонстрационном режиме и ещё не подключён к языковой модели. Но мы уже подготовили основу для настоящего EMO.'}
-document.getElementById('chat').addEventListener('submit',e=>{e.preventDefault();const s=entry.value.trim();if(!s)return;add(s,'user');entry.value='';statusEl.textContent='Слушаю и думаю…';robot.className='robot think';setTimeout(()=>{const r=reply(s);add(r,'bot');robot.className='robot happy';statusEl.textContent='Кажется, я понял тебя!';},350)});
-document.querySelectorAll('[data-mood]').forEach(b=>b.addEventListener('click',()=>{const m=b.dataset.mood;robot.className='robot'+(m==='normal'?'':' '+m);statusEl.textContent=({happy:'Ура! Мне весело!',think:'Хмм… дай подумать.',sleep:'Тихо-тихо… отдыхаю.',normal:'Я здесь. Давай знакомиться!'})[m]}));
-document.getElementById('clear').addEventListener('click',()=>{if(confirm('Удалить всю сохранённую переписку?')){messages.innerHTML='';localStorage.removeItem(key);add('Переписка очищена. Начнём сначала?','bot')}});
-document.getElementById('mic').addEventListener('click',()=>{
- const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!SpeechRecognition){document.getElementById('micnote').textContent='Голосовой ввод в этом браузере не поддерживается. Попробуй открыть прототип в Chrome на Android.';return}
- const rec=new SpeechRecognition();rec.lang='ru-RU';rec.interimResults=false;rec.maxAlternatives=1;
- const btn=document.getElementById('mic');btn.textContent='🎙️ Слушаю…';statusEl.textContent='Говори, я слушаю.';
- rec.onresult=e=>{entry.value=e.results[0][0].transcript;document.getElementById('micnote').textContent='Распознано: '+entry.value;entry.focus()};
- rec.onerror=e=>{document.getElementById('micnote').textContent='Не удалось распознать речь ('+e.error+'). Проверь разрешение микрофона и интернет.'};
- rec.onend=()=>{btn.textContent='🎙️ Сказать EMO';statusEl.textContent='Я здесь. Давай знакомиться!'};
- try{rec.start()}catch(e){document.getElementById('micnote').textContent='Не получилось запустить микрофон. Попробуй ещё раз.'}
-});
+function reply(s) {
+  const t = s.toLowerCase();
+
+  const memoryAnswer = handleMemory(s);
+  if (memoryAnswer) return memoryAnswer;
+
+  if (/привет|здравств|хай|hello/.test(t))
+    return 'Привет! Рад тебя видеть. О чём поговорим?';
+
+  if (/как дела|как ты/.test(t))
+    return 'Я в хорошем настроении и готов общаться! А как у тебя дела?';
+
+  if (/кто ты|твоё имя|тебя зовут/.test(t))
+    return 'Я виртуальный EMO — пока ранний прототип, который мы постепенно оживим.';
+
+  if (/памят|запомни/.test(t))
+    return 'В этой версии переписка сохраняется в браузере на этом телефоне. Настоящую управляемую память добавим отдельно.';
+
+  if (/пока|до свидан/.test(t))
+    return 'До скорой встречи! Я буду здесь, когда вернёшься.';
+
+  if (/спасибо/.test(t))
+    return 'Всегда пожалуйста! 😊';
+
+  if (/помоги|соболь|машин|ремонт/.test(t))
+    return 'Давай разберёмся вместе. Пока у меня нет подключённой нейросети, поэтому для точных технических ответов сначала подключим ИИ.';
+
+  return 'Я тебя услышал! Сейчас я работаю в демонстрационном режиме и ещё не подключён к языковой модели. Но мы уже подготовили основу для настоящего EMO.';
+}
 document.getElementById('speak').addEventListener('click',()=>{const last=[...messages.querySelectorAll('.msg.bot')].pop();if(!last)return;if(!('speechSynthesis' in window)){alert('В этом браузере озвучивание недоступно. Попробуй Chrome на Android.');return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(last.textContent);u.lang='ru-RU';speechSynthesis.speak(u)});
 load();
 </script>
