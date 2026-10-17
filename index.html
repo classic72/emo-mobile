@@ -130,7 +130,25 @@ function handleMemory(s) {
       return 'Не удалось очистить память.';
     }
   }
+  // Ответ на вопрос об автомобиле
+  if (
+    /(автомобил|машин)/i.test(text) &&
+    /(какой|какая|какое|какую|модель|у меня|мой|моя)/i.test(text)
+  ) {
+    const fact = readFacts().find(
+      x => /(автомобил|машин)/i.test(x)
+    );
 
+    if (!fact) {
+      return 'Ты пока не рассказывал мне, какой у тебя автомобиль.';
+    }
+
+    const model = fact.match(/[—–-:]\s*(.+)$/);
+
+    return model
+      ? 'Ты говорил, что твой автомобиль — ' + model[1] + '.'
+      : 'В моей памяти записано: ' + fact;
+  }
   return null;
 }
  function reply(s){const t=s.toLowerCase(); const memoryAnswer = handleMemory(s);
